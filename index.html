@@ -122,6 +122,15 @@ input[type=range]{width:100%;accent-color:var(--broth);}
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px;}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:500px){.page{padding:1rem 1rem 3rem;}header{padding:0 1rem;}.order-row{grid-template-columns:1fr 60px 60px 60px;}}
+
+.re-row{display:grid;grid-template-columns:1fr 70px 60px 130px 30px;gap:6px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);}
+.re-row:last-child{border-bottom:none;}
+.re-inp{font-size:13px;border:1px solid var(--border);border-radius:6px;padding:5px 8px;background:#fff;color:var(--ink);width:100%;}
+.re-inp:focus{outline:none;border-color:var(--broth);box-shadow:0 0 0 3px rgba(200,135,58,.15);}
+.re-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;padding:2px;}
+.re-del:hover{color:var(--spicy);}
+.dish-tab{padding:6px 12px;font-size:12px;font-weight:500;border:1px solid var(--border);border-radius:20px;cursor:pointer;background:#fff;color:var(--muted);transition:all .15s;}
+.dish-tab.active{background:var(--ink);color:var(--broth);border-color:var(--ink);}
 </style>
 </head>
 <body>
@@ -614,6 +623,180 @@ db.from('inventory_counts').select('count',{count:'exact',head:true}).then(({err
   if(error){el.textContent='⬤ offline';el.style.color='#c0392b';}
   else{el.textContent='⬤ live';el.style.color='#27ae60';}
 });
+
+// ── RECIPE EDITOR ────────────────────────────────────────────────────────────
+let recipeList=[];
+let recipeIngMap={};
+let activeRecipeId=null;
+let pendingIngredients=[];
+
+async function loadRecipes(){
+  try{
+    const {data:dishes,error:e1}=await db.from('recipes').select('*').order('category').order('dish_name');
+    if(e1)throw e1;
+    const {data:ings,error:e2}=await db.from('recipe_ingredients').select('*').order('ingredient');
+    if(e2)throw e2;
+    recipeList=dishes||[];
+    recipeIngMap={};
+    (ings||[]).forEach(ing=>{if(!recipeIngMap[ing.recipe_id])recipeIngMap[ing.recipe_id]=[];recipeIngMap[ing.recipe_id].push(ing);});
+    buildDishTabs();
+    buildRecipeSummary();
+    document.getElementById('recipe-sync').textContent='Loaded from database ✓';
+  }catch(e){document.getElementById('recipe-sync').textContent='Error: '+e.message;}
+}
+
+function buildDishTabs(){
+  const wrap=document.getElementById('recipe-dish-tabs');
+  wrap.innerHTML='';
+  const cats=[...new Set(recipeList.map(r=>r.category))];
+  cats.forEach(cat=>{
+    const lbl=document.createElement('div');
+    lbl.style.cssText='font-size:11px;font-weight:500;color:var(--muted);width:100%;margin-top:8px;text-transform:uppercase;letter-spacing:.05em;';
+    lbl.textContent=cat;
+    wrap.appendChild(lbl);
+    recipeList.filter(r=>r.category===cat).forEach(r=>{
+      const btn=document.createElement('button');
+      btn.className='dish-tab'+(r.id===activeRecipeId?' active':'');
+      btn.textContent=r.dish_name;
+      btn.onclick=()=>openRecipe(r.id);
+      wrap.appendChild(btn);
+    });
+  });
+}
+
+function openRecipe(id){
+  activeRecipeId=id;
+  const recipe=recipeList.find(r=>r.id===id);
+  pendingIngredients=JSON.parse(JSON.stringify(recipeIngMap[id]||[]));
+  document.getElementById('re-dish-name').textContent=recipe.dish_name;
+  document.getElementById('re-dish-cat').textContent=recipe.category;
+  document.getElementById('re-dish-price').textContent='$'+(recipe.price||0).toFixed(2);
+  document.getElementById('recipe-editor-wrap').style.display='block';
+  buildDishTabs();
+  renderIngList();
+}
+
+function renderIngList(){
+  const list=document.getElementById('re-ing-list');
+  const SUPPLIERS=['Wismettac','Texas Mutual','L. East Poultry','Sysco','99 Ranch','US Foods','HEB','Other'];
+  const UNITS=['g','ml','ea','cs','case','lb','oz','kg','L'];
+  list.innerHTML=pendingIngredients.length===0?'<div style="color:var(--muted);font-size:13px;padding:.5rem 0;">No ingredients yet. Add one below.</div>':'';
+  pendingIngredients.forEach((ing,idx)=>{
+    const row=document.createElement('div');
+    row.className='re-row';
+    row.innerHTML=`
+      <input class="re-inp" type="text" value="${ing.ingredient}" placeholder="Ingredient name" onchange="pendingIngredients[${idx}].ingredient=this.value">
+      <input class="re-inp" type="number" value="${ing.quantity}" min="0" step="0.1" style="text-align:right;" onchange="pendingIngredients[${idx}].quantity=+this.value">
+      <select class="re-inp" onchange="pendingIngredients[${idx}].unit=this.value">${UNITS.map(u=>'<option'+(u===ing.unit?' selected':'')+'>'+u+'</option>').join('')}</select>
+      <select class="re-inp" onchange="pendingIngredients[${idx}].supplier=this.value">${SUPPLIERS.map(s=>'<option'+(s===ing.supplier?' selected':'')+'>'+s+'</option>').join('')}</select>
+      <button class="re-del" onclick="removeIngredient(${idx})" title="Remove">×</button>`;
+    list.appendChild(row);
+  });
+}
+
+function addIngredient(){
+  pendingIngredients.push({ingredient:'',quantity:0,unit:'g',supplier:'Wismettac'});
+  renderIngList();
+  setTimeout(()=>{const inputs=document.querySelectorAll('#re-ing-list .re-inp[type=text]');if(inputs.length)inputs[inputs.length-1].focus();},50);
+}
+
+function removeIngredient(idx){
+  pendingIngredients.splice(idx,1);
+  renderIngList();
+}
+
+async function saveRecipe(){
+  const staffName=document.getElementById('recipe-staff').value.trim()||'Manager';
+  const btn=document.getElementById('recipe-save-btn');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span>Saving...';
+  try{
+    const {error:delErr}=await db.from('recipe_ingredients').delete().eq('recipe_id',activeRecipeId);
+    if(delErr)throw delErr;
+    const rows=pendingIngredients.filter(ing=>ing.ingredient.trim()).map(ing=>({recipe_id:activeRecipeId,ingredient:ing.ingredient.trim(),quantity:ing.quantity,unit:ing.unit,supplier:ing.supplier,updated_at:new Date().toISOString()}));
+    if(rows.length){const {error:insErr}=await db.from('recipe_ingredients').insert(rows);if(insErr)throw insErr;}
+    await db.from('recipes').update({updated_at:new Date().toISOString()}).eq('id',activeRecipeId);
+    showRecipeToast('Saved by '+staffName+' ✓');
+    await loadRecipes();
+    openRecipe(activeRecipeId);
+  }catch(e){showRecipeToast('Error: '+e.message,true);}
+  btn.disabled=false;
+  btn.innerHTML='Save Recipe to Database';
+}
+
+function buildRecipeSummary(){
+  const tbody=document.getElementById('recipe-summary-body');
+  tbody.innerHTML='';
+  recipeList.forEach(recipe=>{
+    const ings=recipeIngMap[recipe.id]||[];
+    if(!ings.length){
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td style="font-weight:500;">${recipe.dish_name}</td><td colspan="4" style="color:var(--muted);font-size:12px;">No ingredients set</td>`;
+      tbody.appendChild(tr);return;
+    }
+    ings.forEach((ing,i)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td style="font-weight:${i===0?'500':'400'};color:${i===0?'var(--ink)':'transparent'};">${i===0?recipe.dish_name:''}</td><td>${ing.ingredient}</td><td class="num">${ing.quantity}</td><td style="font-size:12px;color:var(--muted);">${ing.unit}</td><td style="font-size:12px;color:var(--muted);">${ing.supplier||''}</td>`;
+      tbody.appendChild(tr);
+    });
+    const sep=document.createElement('tr');
+    sep.innerHTML='<td colspan="5" style="padding:0;border-bottom:2px solid var(--border);"></td>';
+    tbody.appendChild(sep);
+  });
+}
+
+function showRecipeToast(msg,err=false){
+  const el=document.getElementById('recipe-toast');
+  el.textContent=msg;el.className='toast-msg'+(err?' err':'');el.style.display='block';
+  setTimeout(()=>el.style.display='none',4000);
+}
+
+const _origShow=window.show;
+window.show=function(id,btn){_origShow(id,btn);if(id==='recipes')loadRecipes();};
+
 </script>
+
+<!-- RECIPE EDITOR -->
+<div class="page" id="page-recipes">
+  <div style="margin-top:1.25rem;">
+    <div class="staff-bar">
+      <span style="font-size:13px;font-weight:500;">Editing as:</span>
+      <input class="staff-input" id="recipe-staff" type="text" placeholder="Your name (manager only)...">
+      <div id="recipe-sync" style="font-size:12px;color:var(--muted);"></div>
+    </div>
+    <div id="recipe-toast" class="toast-msg"></div>
+
+    <div class="sec">Select dish to edit</div>
+    <div id="recipe-dish-tabs" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem;"></div>
+
+    <div id="recipe-editor-wrap" style="display:none;">
+      <div class="card" style="margin-bottom:.75rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div>
+            <div style="font-size:18px;font-weight:500;" id="re-dish-name">—</div>
+            <div style="font-size:12px;color:var(--muted);" id="re-dish-cat">—</div>
+          </div>
+          <div style="font-family:'DM Mono',monospace;font-size:20px;font-weight:500;color:var(--broth);" id="re-dish-price">—</div>
+        </div>
+
+        <div class="sec" style="font-size:16px;margin-top:.5rem;">Ingredients</div>
+        <div id="re-ing-list"></div>
+
+        <button onclick="addIngredient()" style="margin-top:10px;padding:8px 16px;border:1.5px dashed var(--border);border-radius:8px;background:none;cursor:pointer;font-size:13px;color:var(--muted);width:100%;">+ Add ingredient</button>
+      </div>
+
+      <button class="save-btn" id="recipe-save-btn" onclick="saveRecipe()">💾 Save Recipe to Database</button>
+    </div>
+
+    <div class="sec">All Recipes — Current Ratios</div>
+    <div style="overflow-x:auto;">
+    <table class="tbl" id="recipe-summary-tbl">
+      <thead><tr><th>Dish</th><th>Ingredient</th><th class="num">Qty</th><th>Unit</th><th>Supplier</th></tr></thead>
+      <tbody id="recipe-summary-body"><tr><td colspan="5" style="color:var(--muted);font-size:13px;padding:1rem 0;">Loading recipes...</td></tr></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
