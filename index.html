@@ -4,878 +4,511 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sazan Ramen — Staff Dashboard</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --ink: #0F0E0C;
-    --paper: #F5F2EC;
-    --steam: #E8E4DA;
-    --broth: #C8873A;
-    --broth-light: #F5E6D0;
-    --spicy: #C0392B;
-    --cold: #2980B9;
-    --cold-light: #D6EAF8;
-    --muted: #7A7668;
-    --border: rgba(15,14,12,0.12);
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--paper);
-    color: var(--ink);
-    min-height: 100vh;
-    font-size: 15px;
-    line-height: 1.5;
-  }
-
-  /* ── Header ── */
-  header {
-    background: var(--ink);
-    color: var(--paper);
-    padding: 0 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 56px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-  .logo {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 26px;
-    letter-spacing: 2px;
-    color: var(--broth);
-  }
-  .logo span { color: var(--paper); }
-  #live-time {
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    color: var(--muted);
-    letter-spacing: 1px;
-  }
-  .weather-chip {
-    background: rgba(255,255,255,0.08);
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    color: #ccc;
-    font-family: 'DM Mono', monospace;
-  }
-
-  /* ── Nav tabs ── */
-  nav {
-    background: var(--steam);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  nav::-webkit-scrollbar { display: none; }
-  .nav-tab {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 500;
-    padding: 12px 20px;
-    white-space: nowrap;
-    color: var(--muted);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: all .2s;
-    background: none;
-    border-top: none;
-    border-left: none;
-    border-right: none;
-    letter-spacing: .3px;
-  }
-  .nav-tab.active {
-    color: var(--ink);
-    border-bottom-color: var(--broth);
-  }
-  .nav-tab:hover:not(.active) { color: var(--ink); }
-
-  /* ── Page sections ── */
-  .page { display: none; padding: 1.25rem 1.5rem 3rem; max-width: 900px; margin: 0 auto; }
-  .page.active { display: block; }
-
-  /* ── KPI grid ── */
-  .kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 10px;
-    margin-bottom: 1.5rem;
-  }
-  .kpi {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 16px;
-  }
-  .kpi-label {
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--muted);
-    letter-spacing: .05em;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-  .kpi-value {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 30px;
-    color: var(--ink);
-    letter-spacing: 1px;
-    line-height: 1;
-  }
-  .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
-  .kpi.highlight { background: var(--ink); border-color: var(--ink); }
-  .kpi.highlight .kpi-label { color: rgba(245,242,236,0.5); }
-  .kpi.highlight .kpi-value { color: var(--broth); }
-  .kpi.highlight .kpi-sub { color: rgba(245,242,236,0.4); }
-
-  /* ── Section header ── */
-  .section-head {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 20px;
-    letter-spacing: 2px;
-    color: var(--ink);
-    margin: 1.5rem 0 .75rem;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .section-head::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  /* ── Forecast cards ── */
-  .forecast-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-    gap: 8px;
-    margin-bottom: 1.5rem;
-  }
-  .fc-card {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 10px;
-    text-align: center;
-    transition: transform .15s;
-  }
-  .fc-card:hover { transform: translateY(-2px); }
-  .fc-card.high { background: var(--broth-light); border-color: var(--broth); }
-  .fc-card.rainy { background: var(--cold-light); border-color: var(--cold); }
-  .fc-dow { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
-  .fc-date { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
-  .fc-orders {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 32px;
-    color: var(--ink);
-    line-height: 1;
-  }
-  .fc-orders-label { font-size: 10px; color: var(--muted); margin-bottom: 4px; }
-  .fc-revenue { font-size: 13px; font-weight: 500; color: var(--broth); }
-  .fc-badge {
-    display: inline-block;
-    font-size: 9px;
-    font-weight: 500;
-    padding: 2px 6px;
-    border-radius: 4px;
-    margin-top: 4px;
-    text-transform: uppercase;
-    letter-spacing: .06em;
-  }
-  .badge-high { background: var(--broth); color: #fff; }
-  .badge-rain { background: var(--cold); color: #fff; }
-  .badge-cold { background: var(--ink); color: var(--broth); }
-  .badge-normal { background: var(--steam); color: var(--muted); }
-
-  /* ── Bowl table ── */
-  .bowl-table { width: 100%; border-collapse: collapse; }
-  .bowl-table th {
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--muted);
-    text-align: left;
-    padding: 8px 12px;
-    border-bottom: 1px solid var(--border);
-    text-transform: uppercase;
-    letter-spacing: .05em;
-  }
-  .bowl-table td {
-    padding: 10px 12px;
-    border-bottom: 1px solid var(--border);
-    font-size: 14px;
-  }
-  .bowl-table tr:last-child td { border-bottom: none; }
-  .bowl-table tr:hover td { background: var(--steam); }
-  .bowl-bar-wrap { width: 100%; background: var(--steam); border-radius: 3px; height: 6px; overflow: hidden; }
-  .bowl-bar { height: 100%; border-radius: 3px; background: var(--broth); }
-  .bowl-name { font-weight: 500; }
-  .bowl-num {
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    text-align: right;
-    color: var(--ink);
-  }
-
-  /* ── Temp correlation ── */
-  .temp-insight {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 1rem 1.25rem;
-    margin-bottom: 10px;
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-  }
-  .temp-icon {
-    font-size: 22px;
-    flex-shrink: 0;
-    width: 36px;
-    text-align: center;
-    margin-top: 1px;
-  }
-  .temp-insight-title { font-weight: 500; font-size: 14px; margin-bottom: 2px; }
-  .temp-insight-body { font-size: 13px; color: var(--muted); line-height: 1.5; }
-
-  .month-bar-grid { display: flex; flex-direction: column; gap: 6px; }
-  .month-row { display: grid; grid-template-columns: 36px 1fr 70px; gap: 8px; align-items: center; }
-  .month-name { font-size: 12px; font-weight: 500; color: var(--muted); }
-  .month-bar-outer { background: var(--steam); border-radius: 4px; height: 18px; overflow: hidden; position: relative; }
-  .month-bar-inner { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 6px; }
-  .month-bar-label { font-size: 11px; font-weight: 500; color: #fff; font-family: 'DM Mono', monospace; }
-  .month-orders { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); text-align: right; }
-
-  /* ── Ingredient calculator ── */
-  .calc-bowl-row {
-    display: grid;
-    grid-template-columns: 1fr 80px;
-    gap: 8px;
-    align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .calc-bowl-row:last-child { border-bottom: none; }
-  .calc-label { font-size: 14px; font-weight: 500; }
-  .calc-input {
-    font-family: 'DM Mono', monospace;
-    font-size: 16px;
-    font-weight: 500;
-    background: var(--broth-light);
-    border: 1.5px solid var(--broth);
-    border-radius: 6px;
-    padding: 6px 8px;
-    width: 100%;
-    text-align: center;
-    color: var(--ink);
-  }
-  .calc-input:focus { outline: none; border-color: var(--broth); box-shadow: 0 0 0 3px rgba(200,135,58,0.15); }
-  .ing-table { width: 100%; border-collapse: collapse; margin-top: .5rem; }
-  .ing-table th {
-    font-size: 11px; font-weight: 500; color: var(--muted);
-    text-align: left; padding: 8px 10px;
-    border-bottom: 1px solid var(--border);
-    text-transform: uppercase; letter-spacing: .05em;
-  }
-  .ing-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); font-size: 13px; }
-  .ing-table tr:last-child td { border-bottom: none; }
-  .ing-qty {
-    font-family: 'DM Mono', monospace;
-    font-size: 15px;
-    font-weight: 500;
-    color: var(--broth);
-    text-align: right;
-  }
-  .ing-note { font-size: 11px; color: var(--muted); }
-
-  /* ── Revenue estimator ── */
-  .est-day-card {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 14px;
-    margin-bottom: 8px;
-  }
-  .est-day-card.high { border-left: 3px solid var(--broth); }
-  .est-day-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-  .est-day-name { font-weight: 500; font-size: 15px; }
-  .est-day-rev {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 22px;
-    color: var(--broth);
-    letter-spacing: 1px;
-  }
-  .est-sliders { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .slider-wrap label { font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; margin-bottom: 3px; }
-  .slider-wrap label span { font-weight: 500; color: var(--ink); font-family: 'DM Mono', monospace; }
-  input[type=range] { width: 100%; accent-color: var(--broth); }
-
-  /* ── Card wrapper ── */
-  .card {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 1rem 1.25rem;
-    margin-bottom: 1rem;
-  }
-
-  /* ── Util ── */
-  .tag {
-    display: inline-block;
-    font-size: 10px;
-    font-weight: 500;
-    padding: 2px 7px;
-    border-radius: 4px;
-    letter-spacing: .04em;
-    text-transform: uppercase;
-  }
-  .week-total-bar {
-    background: var(--ink);
-    border-radius: 10px;
-    padding: 14px 18px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 1rem;
-  }
-  .week-total-label { font-size: 13px; color: rgba(245,242,236,0.5); }
-  .week-total-val { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--broth); letter-spacing: 1px; }
-
-  @media(max-width:500px){
-    .page { padding: 1rem 1rem 3rem; }
-    header { padding: 0 1rem; }
-    .forecast-grid { grid-template-columns: repeat(auto-fill, minmax(90px,1fr)); }
-  }
+:root{--ink:#0F0E0C;--paper:#F5F2EC;--steam:#E8E4DA;--broth:#C8873A;--broth-l:#F5E6D0;--spicy:#C0392B;--cold:#2980B9;--cold-l:#D6EAF8;--green:#27AE60;--green-l:#D5F5E3;--muted:#7A7668;--border:rgba(15,14,12,0.12);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;font-size:15px;}
+header{background:var(--ink);color:var(--paper);padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:var(--broth);}
+.logo span{color:var(--paper);}
+#live-time{font-family:'DM Mono',monospace;font-size:13px;color:var(--muted);}
+nav{background:var(--steam);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;scrollbar-width:none;}
+nav::-webkit-scrollbar{display:none;}
+.nav-tab{font-size:13px;font-weight:500;padding:12px 18px;white-space:nowrap;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;transition:all .2s;}
+.nav-tab.active{color:var(--ink);border-bottom-color:var(--broth);}
+.page{display:none;padding:1.25rem 1.5rem 3rem;max-width:920px;margin:0 auto;}
+.page.active{display:block;}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:1.5rem;}
+.kpi{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
+.kpi.dark{background:var(--ink);border-color:var(--ink);}
+.kpi-label{font-size:11px;font-weight:500;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px;}
+.kpi.dark .kpi-label{color:rgba(245,242,236,.45);}
+.kpi-value{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--ink);letter-spacing:1px;line-height:1;}
+.kpi.dark .kpi-value{color:var(--broth);}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:3px;}
+.kpi.dark .kpi-sub{color:rgba(245,242,236,.35);}
+.sec{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--ink);margin:1.5rem 0 .75rem;display:flex;align-items:center;gap:10px;}
+.sec::after{content:'';flex:1;height:1px;background:var(--border);}
+.card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;margin-bottom:.75rem;}
+.fc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:1.5rem;}
+.fc{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 10px;text-align:center;transition:transform .15s;}
+.fc:hover{transform:translateY(-2px);}
+.fc.high{background:var(--broth-l);border-color:var(--broth);}
+.fc.rain{background:var(--cold-l);border-color:var(--cold);}
+.fc-dow{font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+.fc-date{font-size:11px;color:var(--muted);margin-bottom:6px;}
+.fc-orders{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--ink);line-height:1;}
+.fc-orders-lbl{font-size:10px;color:var(--muted);margin-bottom:4px;}
+.fc-rev{font-size:13px;font-weight:500;color:var(--broth);}
+.badge{display:inline-block;font-size:9px;font-weight:500;padding:2px 6px;border-radius:4px;margin-top:4px;text-transform:uppercase;letter-spacing:.06em;}
+.b-high{background:var(--broth);color:#fff;}
+.b-rain{background:var(--cold);color:#fff;}
+.b-norm{background:var(--steam);color:var(--muted);}
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{font-size:11px;font-weight:500;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.05em;}
+.tbl td{padding:9px 10px;border-bottom:1px solid var(--border);font-size:13px;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:var(--steam);}
+.tbl .num{font-family:'DM Mono',monospace;font-size:12px;text-align:right;}
+.bar-wrap{background:var(--steam);border-radius:3px;height:6px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:3px;background:var(--broth);}
+/* Inventory */
+.inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-bottom:1rem;}
+.inv-item{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px;}
+.inv-name{font-size:12px;font-weight:500;color:var(--ink);margin-bottom:6px;line-height:1.3;}
+.inv-input{font-family:'DM Mono',monospace;font-size:18px;font-weight:500;background:var(--broth-l);border:1.5px solid var(--broth);border-radius:6px;padding:6px 8px;width:100%;text-align:center;color:var(--ink);}
+.inv-input:focus{outline:none;box-shadow:0 0 0 3px rgba(200,135,58,.2);}
+.inv-unit{font-size:11px;color:var(--muted);margin-top:4px;text-align:center;}
+.inv-status{font-size:10px;font-weight:500;padding:2px 6px;border-radius:4px;margin-top:4px;text-align:center;}
+.st-ok{background:var(--green-l);color:#1a6b3a;}
+.st-low{background:#FFF3E0;color:#7B3800;}
+.st-crit{background:#FDECEA;color:#7B1818;}
+/* Order sheet */
+.order-sup{background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden;}
+.order-sup-head{padding:12px 14px;display:flex;justify-content:space-between;align-items:center;}
+.order-sup-name{font-weight:500;font-size:15px;}
+.order-sup-day{font-size:12px;padding:3px 8px;border-radius:4px;font-weight:500;}
+.order-sup-body{border-top:1px solid var(--border);}
+.order-row{display:grid;grid-template-columns:1fr 90px 90px 90px;gap:8px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);}
+.order-row:last-child{border-bottom:none;}
+.order-row.need{background:#FFFBF5;}
+.order-item{font-size:13px;}
+.order-have{font-family:'DM Mono',monospace;font-size:13px;text-align:center;color:var(--muted);}
+.order-need{font-family:'DM Mono',monospace;font-size:13px;text-align:center;color:var(--ink);}
+.order-qty-input{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;background:var(--broth-l);border:1.5px solid var(--broth);border-radius:6px;padding:4px 6px;width:100%;text-align:center;}
+.order-qty-input:focus{outline:none;}
+/* Supplier cards */
+.sup-card{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px;}
+.sup-head{padding:12px 14px;color:#fff;display:flex;justify-content:space-between;align-items:center;}
+.sup-head-name{font-weight:500;font-size:15px;}
+.sup-head-meta{font-size:12px;opacity:.8;}
+.sup-body{padding:.5rem 0;}
+/* Rev estimator */
+.est-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;}
+.est-card.high{border-left:3px solid var(--broth);}
+.est-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.est-day{font-weight:500;}
+.est-rev{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--broth);letter-spacing:1px;}
+.sliders{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.sl-wrap label{font-size:11px;color:var(--muted);display:flex;justify-content:space-between;margin-bottom:3px;}
+.sl-wrap label span{font-weight:500;color:var(--ink);font-family:'DM Mono',monospace;}
+input[type=range]{width:100%;accent-color:var(--broth);}
+.week-bar{background:var(--ink);border-radius:10px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;margin-top:1rem;}
+.week-bar-lbl{font-size:13px;color:rgba(245,242,236,.5);}
+.week-bar-val{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--broth);letter-spacing:1px;}
+/* Temp */
+.month-row{display:grid;grid-template-columns:36px 1fr 65px;gap:8px;align-items:center;margin-bottom:6px;}
+.month-name{font-size:12px;font-weight:500;color:var(--muted);}
+.bar-outer{background:var(--steam);border-radius:4px;height:18px;overflow:hidden;}
+.bar-inner{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:6px;}
+.bar-lbl{font-size:11px;font-weight:500;color:#fff;font-family:'DM Mono',monospace;}
+.month-temp{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);text-align:right;}
+.insight{background:#fff;border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;margin-bottom:8px;display:flex;gap:12px;}
+.ins-icon{font-size:22px;flex-shrink:0;width:34px;text-align:center;margin-top:1px;}
+.ins-title{font-weight:500;font-size:14px;margin-bottom:2px;}
+.ins-body{font-size:13px;color:var(--muted);line-height:1.5;}
+@media(max-width:500px){.page{padding:1rem 1rem 3rem;}header{padding:0 1rem;}.fc-grid{grid-template-columns:repeat(auto-fill,minmax(90px,1fr));}.order-row{grid-template-columns:1fr 70px 70px 70px;}}
 </style>
 </head>
 <body>
-
 <header>
   <div class="logo"><span>SAZAN</span> RAMEN</div>
-  <div class="weather-chip" id="wx-chip">Austin ☀ 90°F</div>
-  <div id="live-time">--:--</div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div style="font-size:12px;color:#888;font-family:'DM Mono',monospace;">Austin ☀ 90°F</div>
+    <div id="live-time" style="font-family:'DM Mono',monospace;font-size:13px;color:var(--muted);"></div>
+  </div>
 </header>
-
 <nav>
-  <button class="nav-tab active" onclick="show('forecast',this)">Today's Forecast</button>
+  <button class="nav-tab active" onclick="show('forecast',this)">Forecast</button>
+  <button class="nav-tab" onclick="show('inventory',this)">Inventory & Orders</button>
+  <button class="nav-tab" onclick="show('suppliers',this)">Suppliers</button>
   <button class="nav-tab" onclick="show('bowls',this)">Bowl Guide</button>
-  <button class="nav-tab" onclick="show('ingredients',this)">Order Calculator</button>
-  <button class="nav-tab" onclick="show('revenue',this)">Revenue Estimator</button>
-  <button class="nav-tab" onclick="show('temp',this)">Temp & Sales</button>
+  <button class="nav-tab" onclick="show('revenue',this)">Revenue</button>
+  <button class="nav-tab" onclick="show('temp',this)">Weather & Sales</button>
 </nav>
 
-<!-- ═══════════════════════════════════════════════════════ -->
-<!-- PAGE 1: FORECAST                                        -->
-<!-- ═══════════════════════════════════════════════════════ -->
+<!-- FORECAST -->
 <div class="page active" id="page-forecast">
-
   <div class="kpi-grid" style="margin-top:1.25rem;">
-    <div class="kpi highlight">
-      <div class="kpi-label">Today is</div>
-      <div class="kpi-value" id="today-dow">THU</div>
-      <div class="kpi-sub" id="today-date">May 28, 2026</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label">Expected orders</div>
-      <div class="kpi-value">~120</div>
-      <div class="kpi-sub">Thursday baseline</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label">Expected revenue</div>
-      <div class="kpi-value">$4.5K</div>
-      <div class="kpi-sub">weather-adjusted</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label">Austin weather</div>
-      <div class="kpi-value">90°F</div>
-      <div class="kpi-sub">Sunny · 5% rain</div>
-    </div>
+    <div class="kpi dark"><div class="kpi-label">Today</div><div class="kpi-value" id="kpi-dow">THU</div><div class="kpi-sub" id="kpi-date">May 29, 2026</div></div>
+    <div class="kpi"><div class="kpi-label">Expected orders</div><div class="kpi-value">~155</div><div class="kpi-sub">Friday — high volume</div></div>
+    <div class="kpi"><div class="kpi-label">Expected revenue</div><div class="kpi-value">$5.3K</div><div class="kpi-sub">weather-adjusted</div></div>
+    <div class="kpi"><div class="kpi-label">Weather</div><div class="kpi-value">90°F</div><div class="kpi-sub">Sunny · 10% rain</div></div>
   </div>
-
-  <div class="section-head">7-Day Forecast</div>
-  <div class="forecast-grid" id="forecast-cards"></div>
-
-  <div class="section-head">What this means</div>
+  <div class="sec">7-Day Forecast</div>
+  <div class="fc-grid" id="fc-cards"></div>
+  <div class="sec">Today's Prep Notes</div>
   <div class="card">
     <div style="display:flex;flex-direction:column;gap:10px;">
-      <div style="display:flex;gap:10px;align-items:flex-start;">
-        <span style="font-size:20px;">🔶</span>
-        <div><strong>Friday–Sunday are HIGH volume days.</strong> Expect 150–175 orders. Pre-cook extra broth the night before. Make sure all bowls are prepped.</div>
-      </div>
-      <div style="display:flex;gap:10px;align-items:flex-start;">
-        <span style="font-size:20px;">🌧</span>
-        <div><strong>Monday has 40% rain chance.</strong> Expect 8–10% fewer covers than usual. Adjust ingredient orders down slightly.</div>
-      </div>
-      <div style="display:flex;gap:10px;align-items:flex-start;">
-        <span style="font-size:20px;">🍜</span>
-        <div><strong>Top 3 bowls every day:</strong> Spicy Paitan, Signature Paitan, Ma-yu Black. Order in that ratio.</div>
-      </div>
+      <div style="display:flex;gap:10px;"><span style="font-size:18px;">🔶</span><div><strong>Friday–Sunday = HIGH volume.</strong> Expect 150–175 orders. Pre-cook extra Tonkotsu broth tonight. Make sure chashu is prepped.</div></div>
+      <div style="display:flex;gap:10px;"><span style="font-size:18px;">🍜</span><div><strong>Top 3 bowls every day:</strong> Spicy Paitan → Signature Paitan → Ma-yu Black. Order in that ratio.</div></div>
+      <div style="display:flex;gap:10px;"><span style="font-size:18px;">📦</span><div><strong>Tuesday is order day</strong> for Wismettac (noodles) and Texas Mutual (broth bases). Count inventory Monday night.</div></div>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════ -->
-<!-- PAGE 2: BOWL GUIDE                                      -->
-<!-- ═══════════════════════════════════════════════════════ -->
+<!-- INVENTORY & ORDERS -->
+<div class="page" id="page-inventory">
+  <div style="margin-top:1.25rem;" class="card" style="background:var(--broth-l);border-color:var(--broth);">
+    <div style="font-size:13px;color:var(--muted);">Enter current stock levels. The order sheet below calculates what to order automatically based on tomorrow's forecast.</div>
+  </div>
+  <div class="sec">Current Inventory</div>
+  <div class="inv-grid" id="inv-grid"></div>
+  <div class="sec">Order Sheet — by Supplier</div>
+  <div id="order-sheet"></div>
+</div>
+
+<!-- SUPPLIERS -->
+<div class="page" id="page-suppliers">
+  <div class="kpi-grid" style="margin-top:1.25rem;">
+    <div class="kpi"><div class="kpi-label">Total suppliers</div><div class="kpi-value">6</div><div class="kpi-sub">core vendors</div></div>
+    <div class="kpi dark"><div class="kpi-label">Weekly spend</div><div class="kpi-value">$4.6K</div><div class="kpi-sub">avg across suppliers</div></div>
+    <div class="kpi"><div class="kpi-label">#1 by spend</div><div class="kpi-value">WIS</div><div class="kpi-sub">Wismettac — noodles</div></div>
+  </div>
+  <div class="sec">Your Suppliers</div>
+  <div id="sup-cards"></div>
+</div>
+
+<!-- BOWL GUIDE -->
 <div class="page" id="page-bowls">
-  <div style="margin-top:1.25rem;" class="kpi-grid">
-    <div class="kpi"><div class="kpi-label">Top bowl</div><div class="kpi-value">SPICY</div><div class="kpi-sub">Spicy Paitan — #1 always</div></div>
-    <div class="kpi"><div class="kpi-label">Daily avg bowls</div><div class="kpi-value">276</div><div class="kpi-sub">all bowls combined</div></div>
-    <div class="kpi highlight"><div class="kpi-label">Saturday bowls</div><div class="kpi-value">325</div><div class="kpi-sub">biggest day</div></div>
+  <div class="kpi-grid" style="margin-top:1.25rem;">
+    <div class="kpi"><div class="kpi-label">Top bowl</div><div class="kpi-value">SPICY</div><div class="kpi-sub">Spicy Paitan — #1</div></div>
+    <div class="kpi dark"><div class="kpi-label">Saturday bowls</div><div class="kpi-value">325</div><div class="kpi-sub">biggest day</div></div>
+    <div class="kpi"><div class="kpi-label">Avg per day</div><div class="kpi-value">276</div><div class="kpi-sub">all bowls</div></div>
   </div>
-
-  <div class="section-head">Expected bowls by day</div>
-
+  <div class="sec">Expected bowls by day</div>
   <div style="overflow-x:auto;">
-  <table class="bowl-table">
-    <thead>
-      <tr>
-        <th>Bowl</th>
-        <th style="text-align:right">Mon</th>
-        <th style="text-align:right">Tue</th>
-        <th style="text-align:right">Wed</th>
-        <th style="text-align:right">Thu</th>
-        <th style="text-align:right">Fri</th>
-        <th style="text-align:right" style="color:var(--broth)">Sat</th>
-        <th style="text-align:right">Sun</th>
-      </tr>
-    </thead>
-    <tbody id="bowl-tbody"></tbody>
-  </table>
+  <table class="tbl"><thead><tr><th>Bowl</th><th class="num">Mon</th><th class="num">Tue</th><th class="num">Wed</th><th class="num">Thu</th><th class="num" style="color:var(--broth)">Fri</th><th class="num" style="color:var(--broth)">Sat</th><th class="num">Sun</th></tr></thead><tbody id="bowl-dow-tbody"></tbody></table>
   </div>
-
-  <div class="section-head">9-Month Performance</div>
+  <div class="sec">9-Month Performance</div>
   <div style="overflow-x:auto;">
-  <table class="bowl-table">
-    <thead>
-      <tr>
-        <th>Bowl</th>
-        <th style="text-align:right">Total sold</th>
-        <th style="text-align:right">Per day avg</th>
-        <th style="text-align:right">Avg price</th>
-        <th style="width:120px">Volume</th>
-      </tr>
-    </thead>
-    <tbody id="all-time-tbody"></tbody>
-  </table>
+  <table class="tbl"><thead><tr><th>Bowl</th><th class="num">Total sold</th><th class="num">Avg/day</th><th class="num">Avg price</th><th style="width:120px">Volume</th></tr></thead><tbody id="bowl-all-tbody"></tbody></table>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════ -->
-<!-- PAGE 3: INGREDIENT CALCULATOR                           -->
-<!-- ═══════════════════════════════════════════════════════ -->
-<div class="page" id="page-ingredients">
-  <div style="margin-top:1.25rem;" class="card">
-    <div style="font-size:13px;color:var(--muted);margin-bottom:1rem;">Enter tomorrow's expected bowl counts. Ingredient totals calculate automatically.</div>
-    <div id="calc-bowl-inputs"></div>
-    <div style="background:var(--ink);border-radius:8px;padding:10px 14px;margin-top:12px;display:flex;justify-content:space-between;align-items:center;">
-      <span style="font-size:13px;color:rgba(245,242,236,0.5);">Total bowls</span>
-      <span style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--broth);letter-spacing:1px;" id="total-bowls-display">0</span>
-    </div>
-  </div>
-
-  <div class="section-head">Ingredient Order</div>
-  <div class="card" style="padding:0.5rem 0;">
-    <table class="ing-table">
-      <thead>
-        <tr>
-          <th>Ingredient</th>
-          <th style="text-align:right">Per bowl</th>
-          <th style="text-align:right">Total needed</th>
-          <th>Unit</th>
-        </tr>
-      </thead>
-      <tbody id="ing-tbody"></tbody>
-    </table>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════ -->
-<!-- PAGE 4: REVENUE ESTIMATOR                               -->
-<!-- ═══════════════════════════════════════════════════════ -->
+<!-- REVENUE -->
 <div class="page" id="page-revenue">
-  <div style="margin-top:1.25rem;" class="kpi-grid">
+  <div class="kpi-grid" style="margin-top:1.25rem;">
     <div class="kpi"><div class="kpi-label">Avg daily rev</div><div class="kpi-value">$4.3K</div><div class="kpi-sub">9-month baseline</div></div>
-    <div class="kpi highlight"><div class="kpi-label">Week forecast</div><div class="kpi-value" id="rev-week-kpi">—</div><div class="kpi-sub">weather-adjusted</div></div>
+    <div class="kpi dark"><div class="kpi-label">Week forecast</div><div class="kpi-value" id="rev-kpi">—</div><div class="kpi-sub">weather-adjusted</div></div>
     <div class="kpi"><div class="kpi-label">Best day (Sat)</div><div class="kpi-value">$6.0K</div><div class="kpi-sub">historical avg</div></div>
   </div>
-
-  <div class="section-head">Adjust forecast</div>
-  <div id="rev-day-cards"></div>
-
-  <div class="week-total-bar">
-    <span class="week-total-label">Total week forecast</span>
-    <span class="week-total-val" id="grand-total">—</span>
-  </div>
+  <div class="sec">Adjust forecast</div>
+  <div id="rev-cards"></div>
+  <div class="week-bar"><span class="week-bar-lbl">Total week forecast</span><span class="week-bar-val" id="grand-total">—</span></div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════ -->
-<!-- PAGE 5: TEMP & SALES                                    -->
-<!-- ═══════════════════════════════════════════════════════ -->
+<!-- WEATHER & SALES -->
 <div class="page" id="page-temp">
-
-  <div style="margin-top:1.25rem;" class="kpi-grid">
+  <div class="kpi-grid" style="margin-top:1.25rem;">
     <div class="kpi"><div class="kpi-label">Temp correlation</div><div class="kpi-value" style="color:var(--spicy);">-0.25</div><div class="kpi-sub">colder = more orders</div></div>
-    <div class="kpi"><div class="kpi-label">Jan avg orders</div><div class="kpi-value">144</div><div class="kpi-sub">coldest month peak</div></div>
-    <div class="kpi"><div class="kpi-label">Jun avg orders</div><div class="kpi-value">103</div><div class="kpi-sub">hottest month low</div></div>
-    <div class="kpi highlight"><div class="kpi-label">Cold weather lift</div><div class="kpi-value">+39%</div><div class="kpi-sub">sub-60°F vs 95°F+</div></div>
+    <div class="kpi"><div class="kpi-label">Jan avg orders</div><div class="kpi-value">144</div><div class="kpi-sub">coldest peak</div></div>
+    <div class="kpi"><div class="kpi-label">Jun avg orders</div><div class="kpi-value">103</div><div class="kpi-sub">hottest low</div></div>
+    <div class="kpi dark"><div class="kpi-label">Cold lift</div><div class="kpi-value">+39%</div><div class="kpi-sub">sub-60°F vs 95°F+</div></div>
   </div>
-
-  <div class="section-head">Orders by month</div>
-  <div class="card">
-    <div class="month-bar-grid" id="month-bars"></div>
+  <div class="sec">Orders by month</div>
+  <div class="card"><div id="month-bars"></div></div>
+  <div class="sec">Orders by temperature</div>
+  <div class="card" style="padding:.5rem 0;">
+  <table class="tbl"><thead><tr><th>Temp range</th><th class="num">Avg orders</th><th class="num">Avg revenue</th><th class="num">Days</th></tr></thead><tbody id="temp-tbody"></tbody></table>
   </div>
-
-  <div class="section-head">Orders by temperature</div>
-  <div class="card" style="padding:0.5rem 0;">
-    <table class="bowl-table">
-      <thead>
-        <tr>
-          <th>Temp range (°F high)</th>
-          <th style="text-align:right">Avg orders/day</th>
-          <th style="text-align:right">Avg revenue</th>
-          <th style="text-align:right">Days observed</th>
-        </tr>
-      </thead>
-      <tbody id="temp-tbody"></tbody>
-    </table>
-  </div>
-
-  <div class="section-head">Key insights</div>
-  <div class="temp-insight">
-    <div class="temp-icon">❄️</div>
-    <div>
-      <div class="temp-insight-title">Cold front = order more</div>
-      <div class="temp-insight-body">When Austin drops below 65°F, expect 20–25% more orders than a typical warm day. Pre-order extra broth and noodles when you see a cold front in the forecast.</div>
-    </div>
-  </div>
-  <div class="temp-insight">
-    <div class="temp-icon">📅</div>
-    <div>
-      <div class="temp-insight-title">Nov–Jan is your season</div>
-      <div class="temp-insight-body">Winter months average $6,000+/day vs $4,300–4,700 in summer. Staff up and stock heavy from October onwards.</div>
-    </div>
-  </div>
-  <div class="temp-insight">
-    <div class="temp-icon">☀️</div>
-    <div>
-      <div class="temp-insight-title">July–August bounce-back</div>
-      <div class="temp-insight-body">Despite 99°F highs, orders tick up slightly vs June — Austin locals are heat-adapted and indoor dining becomes more appealing, not less, in peak summer.</div>
-    </div>
-  </div>
-  <div class="temp-insight">
-    <div class="temp-icon">🌧</div>
-    <div>
-      <div class="temp-insight-title">Rain hurts weekends most</div>
-      <div class="temp-insight-body">A rainy Saturday is your biggest risk day — it combines your highest-traffic day with an 18–22% traffic penalty. Watch Friday forecasts closely to adjust Saturday prep.</div>
-    </div>
-  </div>
+  <div class="sec">Key insights</div>
+  <div class="insight"><div class="ins-icon">❄️</div><div><div class="ins-title">Cold front = order more</div><div class="ins-body">When Austin drops below 65°F, expect 20–25% more orders. Pre-order extra broth and noodles when you see a cold front.</div></div></div>
+  <div class="insight"><div class="ins-icon">📅</div><div><div class="ins-title">Nov–Jan is your season</div><div class="ins-body">Winter months average $6,000+/day vs $4,300–4,700 in summer. Staff up and stock heavy from October onwards.</div></div></div>
+  <div class="insight"><div class="ins-icon">🌧</div><div><div class="ins-title">Rain hurts weekends most</div><div class="ins-body">A rainy Saturday is your biggest risk — combines highest traffic with an 18–22% penalty. Watch Friday forecasts closely.</div></div></div>
 </div>
 
 <script>
 // ── DATA ────────────────────────────────────────────────────────────────────
-const BOWLS = [
-  { name:'Spicy Paitan',      avg:63.7, price:17.58 },
-  { name:'Signature Paitan',  avg:62.9, price:15.89 },
-  { name:'Ma-yu Black',       avg:39.2, price:16.70 },
-  { name:'Just Like Paitan',  avg:12.0, price:16.71 },
-  { name:'Paitan Jr.',        avg:15.1, price: 8.38 },
-  { name:'Mini Paitan',       avg: 9.3, price:12.22 },
-  { name:'Curry',             avg: 9.1, price:16.07 },
-  { name:'Kid\'s Ramen',      avg: 8.6, price: 8.18 },
-  { name:'Kai Miso',          avg: 6.5, price:15.12 },
-  { name:'Spicy Mazemen',     avg: 2.8, price:13.82 },
+const BOWLS=[
+  {name:'Spicy Paitan',avg:63.7,price:17.58,total:17208,net:302570},
+  {name:'Signature Paitan',avg:62.9,price:15.89,total:16977,net:269739},
+  {name:'Ma-yu Black',avg:39.2,price:16.70,total:10572,net:176566},
+  {name:'Just Like Paitan',avg:12.0,price:16.71,total:3240,net:54150},
+  {name:"Paitan Jr.",avg:15.1,price:8.38,total:2732,net:22885},
+  {name:'Mini Paitan',avg:9.3,price:12.22,total:2506,net:30624},
+  {name:'Curry',avg:9.1,price:16.07,total:2457,net:39485},
+  {name:"Kid's Ramen",avg:8.6,price:8.18,total:1539,net:12595},
+  {name:'Kai Miso',avg:6.5,price:15.12,total:1160,net:17543},
+  {name:'Spicy Mazemen',avg:2.8,price:13.82,total:512,net:7075},
 ];
-const TOTALS = [
-  { name:'Spicy Paitan',      total:17208, avg:63.7, price:17.58, net:302570 },
-  { name:'Signature Paitan',  total:16977, avg:62.9, price:15.89, net:269739 },
-  { name:'Ma-yu Black',       total:10572, avg:39.2, price:16.70, net:176566 },
-  { name:'Just Like Paitan',  total: 3240, avg:12.0, price:16.71, net: 54150 },
-  { name:'Paitan Jr.',        total: 2732, avg:15.1, price: 8.38, net: 22885 },
-  { name:'Mini Paitan',       total: 2506, avg: 9.3, price:12.22, net: 30624 },
-  { name:'Curry',             total: 2457, avg: 9.1, price:16.07, net: 39485 },
-  { name:'Kid\'s Ramen',      total: 1539, avg: 8.6, price: 8.18, net: 12595 },
-  { name:'Kai Miso',          total: 1160, avg: 6.5, price:15.12, net: 17543 },
-  { name:'Spicy Mazemen',     total:  512, avg: 2.8, price:13.82, net:  7075 },
+const DOW_MULT={Monday:.78,Tuesday:.75,Wednesday:.72,Thursday:.67,Friday:1.01,Saturday:1.18,Sunday:1.07};
+const DOW_ORDER=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const BASE_REV=4282;
+const FORECAST=[
+  {date:'Fri May 30',dow:'Friday',temp:90,rain:10},
+  {date:'Sat May 31',dow:'Saturday',temp:88,rain:20},
+  {date:'Sun Jun 01',dow:'Sunday',temp:90,rain:10},
+  {date:'Mon Jun 02',dow:'Monday',temp:91,rain:40},
+  {date:'Tue Jun 03',dow:'Tuesday',temp:89,rain:20},
+  {date:'Wed Jun 04',dow:'Wednesday',temp:88,rain:10},
+  {date:'Thu Jun 05',dow:'Thursday',temp:87,rain:5},
 ];
-const DOW_MULT = { Monday:.78, Tuesday:.75, Wednesday:.72, Thursday:.67, Friday:1.01, Saturday:1.18, Sunday:1.07 };
-const DOW_ORDER = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-const BASE_REV = 4282;
-const INGREDIENTS = [
-  { name:'Ramen noodles (fresh)',    perBowl:150, unit:'g',   note:'' },
-  { name:'Tonkotsu / paitan broth', perBowl:450, unit:'ml',  note:'' },
-  { name:'Chashu pork slices',      perBowl:  2, unit:'pcs', note:'' },
-  { name:'Ajitama soft egg',        perBowl:  1, unit:'pcs', note:'' },
-  { name:'Green onion (negi)',      perBowl: 10, unit:'g',   note:'' },
-  { name:'Nori sheet',              perBowl:  1, unit:'pcs', note:'' },
-  { name:'Bamboo shoots (menma)',   perBowl: 20, unit:'g',   note:'' },
-  { name:'Black garlic oil',        perBowl:  5, unit:'ml',  note:'Ma-yu only' },
-  { name:'Spicy tare / paste',      perBowl: 15, unit:'ml',  note:'Spicy only' },
+const SUPPLIERS=[
+  {name:'Wismettac Asian Foods',color:'#2980B9',days:'Tuesday',category:'Noodles & Asian goods',weeklySpend:1536,
+   items:[
+    {name:'Ramen Noodles Futomen #18 (cs)',avgQty:13.1,unit:'cs',price:29.00},
+    {name:'Kale Ramen Noodles #20 (case)',avgQty:2.3,unit:'case',price:34.94},
+    {name:'Vegan Creamy Veggie Soup Base',avgQty:8.2,unit:'case',price:31.70},
+    {name:'Edamame 400g (case)',avgQty:2.1,unit:'case',price:39.60},
+    {name:'Yuzu Extract 1.8L',avgQty:1.4,unit:'cs',price:75.64},
+    {name:'Takoyaki 30g',avgQty:1.4,unit:'ea',price:101.67},
+   ]},
+  {name:'Texas Mutual Trading',color:'#D95F02',days:'Tuesday',category:'Broth bases & Japanese goods',weeklySpend:1183,
+   items:[
+    {name:'Black Garlic Oil (Ma-yu) (case)',avgQty:9.2,unit:'case',price:32.70},
+    {name:'Terakawa Shoyu Soup Base (cs)',avgQty:3.7,unit:'cs',price:59.90},
+    {name:'Seasoned Bamboo Shoots (cs)',avgQty:1.6,unit:'cs',price:106.80},
+    {name:'Shiro Neri Ooma Paste (cs)',avgQty:10.7,unit:'cs',price:14.60},
+    {name:'Garlic Paste (cs)',avgQty:5.7,unit:'cs',price:12.80},
+    {name:'Sazan Ramen Noodle 9" Twin',avgQty:1.1,unit:'case',price:96.80},
+   ]},
+  {name:'L. East Poultry Co.',color:'#C0392B',days:'Friday & Tuesday',category:'Bones & proteins for broth',weeklySpend:508,
+   items:[
+    {name:'Pork Femur Bones Cut (lb)',avgQty:145.3,unit:'lb',price:1.25},
+    {name:'Chicken Backs Frozen 40# (lb)',avgQty:82.9,unit:'lb',price:0.80},
+    {name:'Chicken Feet 40cs',avgQty:50.3,unit:'cs',price:1.45},
+    {name:'Breast Frames / Bones 40# (lb)',avgQty:45.8,unit:'lb',price:0.88},
+   ]},
+  {name:'Sysco Central Texas',color:'#27AE60',days:'Monday & Thursday',category:'General food & proteins',weeklySpend:918,
+   items:[
+    {name:'Pork Butt Boneless (lb)',avgQty:112.8,unit:'lb',price:2.11},
+    {name:'Soybean Oil (cs)',avgQty:3.1,unit:'cs',price:41.77},
+    {name:'Chicken Wings (ca)',avgQty:2.5,unit:'ca',price:66.15},
+    {name:'Eggs Large Grade AA (cs)',avgQty:2.8,unit:'cs',price:24.77},
+    {name:'Waffle Fries Spicy (cs)',avgQty:2.0,unit:'cs',price:51.64},
+   ]},
+  {name:'99 Ranch Market',color:'#8E44AD',days:'Monday & Wednesday',category:'Asian produce & dry goods',weeklySpend:98,
+   items:[
+    {name:'Fresh Produce (various)',avgQty:1,unit:'trip',price:30},
+    {name:'Korean Soft Tofu',avgQty:2,unit:'ea',price:1.29},
+    {name:'Mushrooms Twin Pack',avgQty:2,unit:'ea',price:1.49},
+    {name:'Szechuan Pepper (cs)',avgQty:1,unit:'cs',price:10.99},
+   ]},
+  {name:'US Foods Dallas',color:'#16A085',days:'Monday & Tuesday',category:'General food supply',weeklySpend:333,
+   items:[
+    {name:'Chicken Breast Boneless (cs)',avgQty:2.0,unit:'cs',price:71.56},
+    {name:'Various dry goods',avgQty:1,unit:'order',price:100},
+   ]},
 ];
-const MONTHLY = [
-  { m:'Jan', temp:61.7, orders:143.8, sales:6318 },
-  { m:'Feb', temp:65.4, orders:123.6, sales:5229 },
-  { m:'Mar', temp:74.3, orders:110.5, sales:4730 },
-  { m:'Apr', temp:81.3, orders:111.5, sales:4692 },
-  { m:'May', temp:87.2, orders:109.2, sales:4656 },
-  { m:'Jun', temp:94.2, orders:103.5, sales:4293 },
-  { m:'Jul', temp:98.5, orders:108.5, sales:4667 },
-  { m:'Aug', temp:98.8, orders:115.2, sales:5052 },
-  { m:'Sep', temp:91.6, orders:116.3, sales:5001 },
-  { m:'Oct', temp:81.9, orders:119.4, sales:4972 },
-  { m:'Nov', temp:70.6, orders:133.3, sales:5676 },
-  { m:'Dec', temp:62.7, orders:139.0, sales:6120 },
+const INV_ITEMS=[
+  {name:'Ramen Noodles (Futomen)',unit:'cs (50x120g)',par:10,orderDay:'Tuesday',supplier:'Wismettac'},
+  {name:'Ma-yu Black Garlic Oil',unit:'case',par:6,orderDay:'Tuesday',supplier:'Texas Mutual'},
+  {name:'Shoyu Soup Base',unit:'cs',par:3,orderDay:'Tuesday',supplier:'Texas Mutual'},
+  {name:'Bamboo Shoots',unit:'cs',par:1,orderDay:'Tuesday',supplier:'Texas Mutual'},
+  {name:'Pork Femur Bones',unit:'lbs',par:100,orderDay:'Friday',supplier:'L. East Poultry'},
+  {name:'Pork Butt (chashu)',unit:'lbs',par:80,orderDay:'Thursday',supplier:'Sysco'},
+  {name:'Eggs (ajitama)',unit:'cs',par:2,orderDay:'Thursday',supplier:'Sysco'},
+  {name:'Chicken Backs',unit:'lbs',par:60,orderDay:'Friday',supplier:'L. East Poultry'},
+  {name:'Soybean Oil',unit:'cs',par:2,orderDay:'Thursday',supplier:'Sysco'},
+  {name:'Edamame',unit:'case',par:2,orderDay:'Tuesday',supplier:'Wismettac'},
+  {name:'Waffle Fries',unit:'cs',par:2,orderDay:'Thursday',supplier:'Sysco'},
+  {name:'Vegan Soup Base',unit:'case',par:3,orderDay:'Tuesday',supplier:'Wismettac'},
 ];
-const TEMP_BUCKETS = [
-  { range:'Below 60°F',  orders:139.7, sales:6110, days:65 },
-  { range:'60 – 65°F',   orders:135.2, sales:5881, days:126 },
-  { range:'65 – 70°F',   orders:129.3, sales:5547, days:108 },
-  { range:'70 – 75°F',   orders:119.7, sales:5096, days:93 },
-  { range:'75 – 80°F',   orders:122.7, sales:5280, days:88 },
-  { range:'80 – 85°F',   orders:110.7, sales:4661, days:110 },
-  { range:'85 – 90°F',   orders:106.2, sales:4395, days:97 },
-  { range:'90 – 95°F',   orders:110.2, sales:4752, days:76 },
-  { range:'95°F +',      orders:113.9, sales:4915, days:152 },
+const MONTHLY=[
+  {m:'Jan',temp:61.7,orders:143.8},{m:'Feb',temp:65.4,orders:123.6},{m:'Mar',temp:74.3,orders:110.5},
+  {m:'Apr',temp:81.3,orders:111.5},{m:'May',temp:87.2,orders:109.2},{m:'Jun',temp:94.2,orders:103.5},
+  {m:'Jul',temp:98.5,orders:108.5},{m:'Aug',temp:98.8,orders:115.2},{m:'Sep',temp:91.6,orders:116.3},
+  {m:'Oct',temp:81.9,orders:119.4},{m:'Nov',temp:70.6,orders:133.3},{m:'Dec',temp:62.7,orders:139.0},
 ];
-const FORECAST_DAYS = [
-  { date:'Fri May 29', dow:'Friday',    temp:90, rain:10 },
-  { date:'Sat May 30', dow:'Saturday',  temp:88, rain:20 },
-  { date:'Sun May 31', dow:'Sunday',    temp:90, rain:10 },
-  { date:'Mon Jun 01', dow:'Monday',    temp:91, rain:40 },
-  { date:'Tue Jun 02', dow:'Tuesday',   temp:89, rain:20 },
-  { date:'Wed Jun 03', dow:'Wednesday', temp:88, rain:10 },
-  { date:'Thu Jun 04', dow:'Thursday',  temp:87, rain: 5 },
+const TEMP_BUCKETS=[
+  {range:'Below 60°F',orders:139.7,sales:6110,days:65},
+  {range:'60 – 65°F',orders:135.2,sales:5881,days:126},
+  {range:'65 – 70°F',orders:129.3,sales:5547,days:108},
+  {range:'70 – 75°F',orders:119.7,sales:5096,days:93},
+  {range:'75 – 80°F',orders:122.7,sales:5280,days:88},
+  {range:'80 – 85°F',orders:110.7,sales:4661,days:110},
+  {range:'85 – 90°F',orders:106.2,sales:4395,days:97},
+  {range:'90 – 95°F',orders:110.2,sales:4752,days:76},
+  {range:'95°F +',orders:113.9,sales:4915,days:152},
 ];
 
-// ── HELPERS ──────────────────────────────────────────────────────────────────
-function fmt$(n){ return '$'+Math.round(n).toLocaleString(); }
-function fmtK(n){ return n>=1000 ? '$'+(n/1000).toFixed(1)+'K' : '$'+Math.round(n); }
-function weatherMult(temp, rain, isWeekend){
-  let m = 1.0;
-  if(rain>=60) m -= isWeekend?.22:.18;
-  else if(rain>=40) m -= isWeekend?.14:.10;
-  else if(rain>=20) m -= isWeekend?.10:.08;
-  else if(rain>=10) m -= .03;
-  if(temp>=95) m -= .05;
-  else if(temp>=85 && rain<20) m += .05;
+// ── HELPERS ─────────────────────────────────────────────────────────────────
+const fmt$=n=>'$'+Math.round(n).toLocaleString();
+const fmtK=n=>n>=1000?'$'+(n/1000).toFixed(1)+'K':fmt$(n);
+function wxMult(t,r,wk){
+  let m=1.0;
+  if(r>=60)m-=wk?.22:.18;
+  else if(r>=40)m-=wk?.14:.10;
+  else if(r>=20)m-=wk?.10:.08;
+  else if(r>=10)m-=.03;
+  if(t>=95)m-=.05;
+  else if(t>=85&&r<20)m+=.05;
   return m;
 }
-function estRev(d){
-  const isWk = ['Saturday','Sunday'].includes(d.dow);
-  return Math.round(BASE_REV * DOW_MULT[d.dow] * weatherMult(d.temp, d.rain, isWk));
-}
-function estOrders(d){
-  return Math.round(113 * DOW_MULT[d.dow] * weatherMult(d.temp, d.rain, ['Saturday','Sunday'].includes(d.dow)));
-}
+const estRev=d=>Math.round(BASE_REV*DOW_MULT[d.dow]*wxMult(d.temp,d.rain,['Saturday','Sunday'].includes(d.dow)));
+const estOrd=d=>Math.round(113*DOW_MULT[d.dow]*wxMult(d.temp,d.rain,['Saturday','Sunday'].includes(d.dow)));
 
-// ── LIVE TIME ────────────────────────────────────────────────────────────────
-function updateTime(){
-  const now = new Date();
-  document.getElementById('live-time').textContent =
-    now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
-}
-setInterval(updateTime,1000); updateTime();
+// ── CLOCK ────────────────────────────────────────────────────────────────────
+(function tick(){
+  const n=new Date();
+  document.getElementById('live-time').textContent=n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
+  setTimeout(tick,1000);
+})();
+const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const now=new Date();
+document.getElementById('kpi-dow').textContent=DAYS[now.getDay()].slice(0,3).toUpperCase();
+document.getElementById('kpi-date').textContent=MONS[now.getMonth()]+' '+now.getDate()+', '+now.getFullYear();
 
-const DAYS_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const now = new Date();
-document.getElementById('today-dow').textContent = DAYS_FULL[now.getDay()].slice(0,3).toUpperCase();
-document.getElementById('today-date').textContent = MONTHS_FULL[now.getMonth()]+' '+now.getDate()+', '+now.getFullYear();
-
-// ── FORECAST CARDS ───────────────────────────────────────────────────────────
-function buildForecast(){
-  const c = document.getElementById('forecast-cards');
-  FORECAST_DAYS.forEach(d=>{
-    const orders = estOrders(d);
-    const rev = estRev(d);
-    const isHigh = ['Friday','Saturday','Sunday'].includes(d.dow);
-    const isRainy = d.rain>=30;
-    const isCold = d.temp < 70;
-    let cls = isRainy ? 'rainy' : isHigh ? 'high' : '';
-    let badge = isRainy ? '<span class="fc-badge badge-rain">Rain risk</span>'
-              : isCold  ? '<span class="fc-badge badge-cold">Cold boost</span>'
-              : isHigh  ? '<span class="fc-badge badge-high">High vol</span>'
-              : '<span class="fc-badge badge-normal">Normal</span>';
-    c.innerHTML += `
-      <div class="fc-card ${cls}">
-        <div class="fc-dow">${d.dow.slice(0,3)}</div>
-        <div class="fc-date">${d.date.split(' ').slice(1).join(' ')}</div>
-        <div class="fc-orders">${orders}</div>
-        <div class="fc-orders-label">orders</div>
-        <div class="fc-revenue">${fmt$(rev)}</div>
-        <div>${badge}</div>
-        <div style="font-size:10px;color:var(--muted);margin-top:3px;">${d.temp}°F · ${d.rain}% rain</div>
-      </div>`;
+// ── FORECAST ─────────────────────────────────────────────────────────────────
+(function(){
+  const c=document.getElementById('fc-cards');
+  FORECAST.forEach(d=>{
+    const o=estOrd(d),r=estRev(d);
+    const hi=['Friday','Saturday','Sunday'].includes(d.dow);
+    const ry=d.rain>=30;
+    const cls=ry?'rain':hi?'high':'';
+    const badge=ry?'<span class="badge b-rain">Rain risk</span>':hi?'<span class="badge b-high">High vol</span>':'<span class="badge b-norm">Normal</span>';
+    c.innerHTML+=`<div class="fc ${cls}"><div class="fc-dow">${d.dow.slice(0,3)}</div><div class="fc-date">${d.date.split(' ').slice(1).join(' ')}</div><div class="fc-orders">${o}</div><div class="fc-orders-lbl">orders</div><div class="fc-rev">${fmt$(r)}</div>${badge}<div style="font-size:10px;color:var(--muted);margin-top:3px;">${d.temp}°F · ${d.rain}%</div></div>`;
   });
+})();
+
+// ── INVENTORY & ORDERS ────────────────────────────────────────────────────────
+const invState={};
+(function(){
+  const g=document.getElementById('inv-grid');
+  INV_ITEMS.forEach((item,i)=>{
+    invState[i]=item.par;
+    g.innerHTML+=`<div class="inv-item"><div class="inv-name">${item.name}</div><input class="inv-input" type="number" id="inv-${i}" value="${item.par}" min="0" oninput="updateInv(${i},+this.value)"><div class="inv-unit">${item.unit}</div><div class="inv-status" id="inv-st-${i}"></div></div>`;
+  });
+  buildOrderSheet();
+  setTimeout(()=>INV_ITEMS.forEach((_,i)=>updateInv(i,invState[i])),100);
+})();
+
+function updateInv(i,v){
+  invState[i]=v;
+  const item=INV_ITEMS[i];
+  const pct=v/item.par;
+  const st=document.getElementById('inv-st-'+i);
+  if(pct>=0.75){st.className='inv-status st-ok';st.textContent='✓ OK';}
+  else if(pct>=0.35){st.className='inv-status st-low';st.textContent='⚠ Low';}
+  else{st.className='inv-status st-crit';st.textContent='🔴 Order now';}
+  buildOrderSheet();
 }
 
-// ── BOWL TABLE ───────────────────────────────────────────────────────────────
-function buildBowls(){
-  const tbody = document.getElementById('bowl-tbody');
-  BOWLS.forEach(b=>{
-    let row = `<tr><td class="bowl-name">${b.name}</td>`;
-    DOW_ORDER.forEach(dow=>{
-      const v = Math.max(1,Math.round(b.avg*DOW_MULT[dow]));
-      const isSat = dow==='Saturday';
-      row += `<td class="bowl-num" ${isSat?'style="color:var(--broth);font-weight:500;"':''}>${v}</td>`;
+function buildOrderSheet(){
+  const sheet=document.getElementById('order-sheet');
+  sheet.innerHTML='';
+  // Group items by supplier
+  const bySup={};
+  INV_ITEMS.forEach((item,i)=>{
+    if(!bySup[item.supplier])bySup[item.supplier]=[];
+    bySup[item.supplier].push({...item,idx:i,have:invState[i]||0,need:Math.max(0,item.par-( invState[i]||0))});
+  });
+  Object.entries(bySup).forEach(([sup,items])=>{
+    const supData=SUPPLIERS.find(s=>s.name.includes(sup.split(' ')[0]))||{color:'#888',days:'TBD'};
+    const hasNeeds=items.some(it=>it.need>0);
+    let rows='';
+    items.forEach(it=>{
+      const needCls=it.need>0?'need':'';
+      rows+=`<div class="order-row ${needCls}">
+        <div class="order-item">${it.name}</div>
+        <div class="order-have">${it.have} ${it.unit}</div>
+        <div class="order-need">${it.need>0?'+ '+it.need+' '+it.unit:'✓'}</div>
+        <input class="order-qty-input" type="number" value="${it.need}" min="0" placeholder="0">
+      </div>`;
     });
-    row += '</tr>';
-    tbody.innerHTML += row;
-  });
-
-  const tbody2 = document.getElementById('all-time-tbody');
-  const maxTotal = TOTALS[0].total;
-  TOTALS.forEach(b=>{
-    const pct = Math.round(b.total/maxTotal*100);
-    tbody2.innerHTML += `
-      <tr>
-        <td class="bowl-name">${b.name}</td>
-        <td class="bowl-num">${b.total.toLocaleString()}</td>
-        <td class="bowl-num">${b.avg}</td>
-        <td class="bowl-num">$${b.price.toFixed(2)}</td>
-        <td><div class="bowl-bar-wrap"><div class="bowl-bar" style="width:${pct}%"></div></div></td>
-      </tr>`;
-  });
-}
-
-// ── INGREDIENT CALCULATOR ─────────────────────────────────────────────────────
-const bowlInputs = {};
-function buildCalc(){
-  const inp = document.getElementById('calc-bowl-inputs');
-  BOWLS.slice(0,8).forEach((b,i)=>{
-    const id = 'bi'+i;
-    const def = Math.round(b.avg);
-    inp.innerHTML += `
-      <div class="calc-bowl-row">
-        <div class="calc-label">${b.name}</div>
-        <input class="calc-input" type="number" id="${id}" value="${def}" min="0" oninput="updateCalc()">
-      </div>`;
-    bowlInputs[id] = 1;
-  });
-  updateCalc();
-}
-function updateCalc(){
-  let total = 0;
-  Object.keys(bowlInputs).forEach(id=>{
-    total += parseInt(document.getElementById(id).value)||0;
-  });
-  document.getElementById('total-bowls-display').textContent = total;
-  const tbody = document.getElementById('ing-tbody');
-  tbody.innerHTML = '';
-  INGREDIENTS.forEach(ing=>{
-    const qty = total * ing.perBowl;
-    let display = '';
-    if(ing.unit==='g') display = qty>=1000 ? (qty/1000).toFixed(1)+' kg' : qty+' g';
-    else if(ing.unit==='ml') display = qty>=1000 ? (qty/1000).toFixed(1)+' L' : qty+' ml';
-    else display = qty+' '+ing.unit;
-    tbody.innerHTML += `
-      <tr>
-        <td>${ing.name}${ing.note?` <span class="ing-note">(${ing.note})</span>`:''}</td>
-        <td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)">${ing.perBowl} ${ing.unit}</td>
-        <td class="ing-qty">${display}</td>
-        <td style="font-size:12px;color:var(--muted);">${ing.unit}</td>
-      </tr>`;
-  });
-}
-
-// ── REVENUE ESTIMATOR ─────────────────────────────────────────────────────────
-const revState = FORECAST_DAYS.map(d=>({...d}));
-function buildRevEstimator(){
-  const c = document.getElementById('rev-day-cards');
-  revState.forEach((d,i)=>{
-    const isHigh = ['Friday','Saturday','Sunday'].includes(d.dow);
-    c.innerHTML += `
-      <div class="est-day-card ${isHigh?'high':''}">
-        <div class="est-day-header">
-          <div>
-            <div class="est-day-name">${d.dow} <span style="font-size:13px;color:var(--muted);font-weight:400;">${d.date}</span></div>
-          </div>
-          <div class="est-day-rev" id="rev-val-${i}">${fmt$(estRev(d))}</div>
+    sheet.innerHTML+=`<div class="order-sup">
+      <div class="order-sup-head">
+        <div>
+          <div class="order-sup-name">${sup}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px;">Delivers: ${supData.days||'TBD'}</div>
         </div>
-        <div class="est-sliders">
-          <div class="slider-wrap">
-            <label>Rain chance <span id="rain-lbl-${i}">${d.rain}%</span></label>
-            <input type="range" min="0" max="90" step="5" value="${d.rain}" oninput="updateRev(${i},'rain',+this.value)">
-          </div>
-          <div class="slider-wrap">
-            <label>Temp <span id="temp-lbl-${i}">${d.temp}°F</span></label>
-            <input type="range" min="55" max="105" step="1" value="${d.temp}" oninput="updateRev(${i},'temp',+this.value)">
-          </div>
+        <div class="order-sup-day" style="background:${supData.color}20;color:${supData.color};">${hasNeeds?'⚠ Items needed':'✓ Stocked'}</div>
+      </div>
+      <div class="order-sup-body">
+        <div class="order-row" style="background:var(--steam);font-size:11px;font-weight:500;color:var(--muted);padding-top:6px;padding-bottom:6px;">
+          <div>ITEM</div><div style="text-align:center;">HAVE</div><div style="text-align:center;">NEED</div><div style="text-align:center;">ORDER QTY</div>
         </div>
-      </div>`;
+        ${rows}
+      </div>
+    </div>`;
   });
-  refreshRevTotals();
-}
-function updateRev(i,key,val){
-  revState[i][key] = val;
-  document.getElementById(`${key}-lbl-${i}`).textContent = key==='rain' ? val+'%' : val+'°F';
-  document.getElementById(`rev-val-${i}`).textContent = fmt$(estRev(revState[i]));
-  refreshRevTotals();
-}
-function refreshRevTotals(){
-  const total = revState.reduce((s,d)=>s+estRev(d),0);
-  document.getElementById('grand-total').textContent = fmt$(total);
-  document.getElementById('rev-week-kpi').textContent = fmtK(total);
 }
 
-// ── MONTHLY BARS ──────────────────────────────────────────────────────────────
-function buildMonthBars(){
-  const c = document.getElementById('month-bars');
-  const maxO = Math.max(...MONTHLY.map(m=>m.orders));
+// ── SUPPLIERS ────────────────────────────────────────────────────────────────
+(function(){
+  const c=document.getElementById('sup-cards');
+  SUPPLIERS.forEach(s=>{
+    let items=s.items.slice(0,5).map(it=>`<div class="order-row"><div class="order-item">${it.name}</div><div class="num" style="text-align:right;font-size:12px;">avg ${it.avgQty} ${it.unit}</div><div class="num" style="text-align:right;font-size:12px;">$${it.price.toFixed(2)}</div><div></div></div>`).join('');
+    c.innerHTML+=`<div class="sup-card">
+      <div class="sup-head" style="background:${s.color};">
+        <div><div class="sup-head-name">${s.name}</div><div class="sup-head-meta">${s.category}</div></div>
+        <div style="text-align:right;"><div style="font-size:18px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;">${fmtK(s.weeklySpend)}/wk</div><div style="font-size:11px;opacity:.8;">Delivers: ${s.days}</div></div>
+      </div>
+      <div class="sup-body">
+        <div class="order-row" style="background:var(--steam);font-size:11px;font-weight:500;color:var(--muted);padding-top:6px;padding-bottom:6px;"><div>TOP ITEMS</div><div class="num">AVG QTY</div><div class="num">UNIT PRICE</div><div></div></div>
+        ${items}
+      </div>
+    </div>`;
+  });
+})();
+
+// ── BOWLS ────────────────────────────────────────────────────────────────────
+(function(){
+  const tb1=document.getElementById('bowl-dow-tbody');
+  BOWLS.forEach(b=>{
+    let row=`<tr><td style="font-weight:500;">${b.name}</td>`;
+    DOW_ORDER.forEach(d=>{
+      const v=Math.max(1,Math.round(b.avg*DOW_MULT[d]));
+      const hi=['Friday','Saturday'].includes(d);
+      row+=`<td class="num" ${hi?'style="color:var(--broth);font-weight:500;"':''}>${v}</td>`;
+    });
+    tb1.innerHTML+=row+'</tr>';
+  });
+  const tb2=document.getElementById('bowl-all-tbody');
+  const mx=BOWLS[0].total;
+  BOWLS.forEach(b=>{
+    const pct=Math.round(b.total/mx*100);
+    tb2.innerHTML+=`<tr><td style="font-weight:500;">${b.name}</td><td class="num">${b.total.toLocaleString()}</td><td class="num">${b.avg}</td><td class="num">$${b.price.toFixed(2)}</td><td><div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"></div></div></td></tr>`;
+  });
+})();
+
+// ── REVENUE ─────────────────────────────────────────────────────────────────
+const revState2=FORECAST.map(d=>({...d}));
+(function(){
+  const c=document.getElementById('rev-cards');
+  revState2.forEach((d,i)=>{
+    const hi=['Friday','Saturday','Sunday'].includes(d.dow);
+    c.innerHTML+=`<div class="est-card ${hi?'high':''}">
+      <div class="est-hdr"><div class="est-day">${d.dow} <span style="font-size:13px;color:var(--muted);font-weight:400;">${d.date}</span></div><div class="est-rev" id="rv-${i}">${fmt$(estRev(d))}</div></div>
+      <div class="sliders">
+        <div class="sl-wrap"><label>Rain <span id="rl-${i}">${d.rain}%</span></label><input type="range" min="0" max="90" step="5" value="${d.rain}" oninput="updRev(${i},'rain',+this.value)"></div>
+        <div class="sl-wrap"><label>Temp <span id="tl-${i}">${d.temp}°F</span></label><input type="range" min="55" max="105" step="1" value="${d.temp}" oninput="updRev(${i},'temp',+this.value)"></div>
+      </div>
+    </div>`;
+  });
+  refreshRev();
+})();
+function updRev(i,k,v){revState2[i][k]=v;document.getElementById((k==='rain'?'rl':'tl')+'-'+i).textContent=k==='rain'?v+'%':v+'°F';document.getElementById('rv-'+i).textContent=fmt$(estRev(revState2[i]));refreshRev();}
+function refreshRev(){const t=revState2.reduce((s,d)=>s+estRev(d),0);document.getElementById('grand-total').textContent=fmt$(t);document.getElementById('rev-kpi').textContent=fmtK(t);}
+
+// ── TEMP & MONTHLY ───────────────────────────────────────────────────────────
+(function(){
+  const c=document.getElementById('month-bars');
+  const mx=Math.max(...MONTHLY.map(m=>m.orders));
   MONTHLY.forEach(m=>{
-    const pct = Math.round(m.orders/maxO*100);
-    const isWinter = m.temp < 70;
-    const bg = isWinter ? 'var(--ink)' : m.temp > 90 ? '#888' : 'var(--broth)';
-    c.innerHTML += `
-      <div class="month-row">
-        <div class="month-name">${m.m}</div>
-        <div class="month-bar-outer">
-          <div class="month-bar-inner" style="width:${pct}%;background:${bg};">
-            <span class="month-bar-label">${Math.round(m.orders)}</span>
-          </div>
-        </div>
-        <div class="month-orders">${m.temp}°F avg</div>
-      </div>`;
+    const pct=Math.round(m.orders/mx*100);
+    const bg=m.temp<70?'var(--ink)':m.temp>90?'#888':'var(--broth)';
+    c.innerHTML+=`<div class="month-row"><div class="month-name">${m.m}</div><div class="bar-outer"><div class="bar-inner" style="width:${pct}%;background:${bg};"><span class="bar-lbl">${Math.round(m.orders)}</span></div></div><div class="month-temp">${m.temp}°F</div></div>`;
   });
-}
-
-// ── TEMP BUCKETS TABLE ────────────────────────────────────────────────────────
-function buildTempTable(){
-  const tbody = document.getElementById('temp-tbody');
-  const maxO = Math.max(...TEMP_BUCKETS.map(t=>t.orders));
+  const tb=document.getElementById('temp-tbody');
+  const mxO=Math.max(...TEMP_BUCKETS.map(t=>t.orders));
   TEMP_BUCKETS.forEach(t=>{
-    const isHigh = t.orders >= 130;
-    tbody.innerHTML += `
-      <tr>
-        <td>${t.range}</td>
-        <td class="bowl-num" ${isHigh?'style="color:var(--broth);font-weight:500;"':''}>${Math.round(t.orders)}</td>
-        <td class="bowl-num">${fmt$(t.sales)}</td>
-        <td class="bowl-num" style="color:var(--muted)">${t.days}</td>
-      </tr>`;
+    const hi=t.orders>=130;
+    tb.innerHTML+=`<tr><td>${t.range}</td><td class="num" ${hi?'style="color:var(--broth);font-weight:500;"':''}>${Math.round(t.orders)}</td><td class="num">${fmt$(t.sales)}</td><td class="num" style="color:var(--muted);">${t.days}</td></tr>`;
   });
-}
+})();
 
-// ── NAV ───────────────────────────────────────────────────────────────────────
-function show(id, btn){
+// ── NAV ──────────────────────────────────────────────────────────────────────
+function show(id,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   btn.classList.add('active');
 }
-
-// ── INIT ──────────────────────────────────────────────────────────────────────
-buildForecast();
-buildBowls();
-buildCalc();
-buildRevEstimator();
-buildMonthBars();
-buildTempTable();
 </script>
 </body>
 </html>
